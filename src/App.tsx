@@ -24,11 +24,19 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                     <Route path="dashboard" element={<Modules />} />
                     <Route path="profile" element={<Profile />} />
+                </Route>
+
+                {/* VIP / VUP Specific Routes */}
+                <Route element={<ProtectedRoute requiredPlan="vip" />}>
                     <Route path="elite" element={<EliteModule />} />
                 </Route>
 
+                <Route element={<ProtectedRoute requiredPlan="vup" />}>
+                    <Route path="standard" element={<StandardModule />} />
+                </Route>
+
                 {/* Admin Routes */}
-                <Route element={<ProtectedRoute role="admin" />}>
+                <Route element={<ProtectedRoute requiredRole="admin" />}>
                     <Route path="admin" element={<AdminPanel />} />
                 </Route>
             </Route>

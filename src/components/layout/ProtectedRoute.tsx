@@ -3,19 +3,12 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-    role?: 'admin' | 'user';
+    requiredRole?: 'admin' | 'user';
+    requiredPlan?: 'vip' | 'vup';
 }
 
-export default function ProtectedRoute({ role }: ProtectedRouteProps) {
+export default function ProtectedRoute({ requiredRole, requiredPlan }: ProtectedRouteProps) {
     const { user, loading } = useAuth();
-
-    if (loading) {
-        return (
-            <div className="min-h-[50vh] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-pluxo-pink" />
-            </div>
-        );
-    }
 
     if (loading) {
         return (
@@ -29,8 +22,25 @@ export default function ProtectedRoute({ role }: ProtectedRouteProps) {
         return <Navigate to="/login" replace />;
     }
 
-    if (role && user.role !== role) {
-        return <Navigate to="/dashboard" replace />; // Or unauthorized page
+    // Role Check
+    if (requiredRole && user.role !== requiredRole) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    // Plan Check
+    if (requiredPlan) {
+        const isVip = user.vip_status === 'active' && user.plan_type === 'vip';
+        const isVup = user.vip_status === 'active' && user.plan_type === 'vup';
+
+        // VIP Access: Requests VIP -> Must be VIP
+        if (requiredPlan === 'vip' && !isVip) {
+            return <Navigate to="/dashboard" replace />;
+        }
+
+        // VUP Access: Requests VUP -> Must be VUP OR VIP (VIPs usually get all access)
+        if (requiredPlan === 'vup' && !isVup && !isVip) {
+            return <Navigate to="/dashboard" replace />;
+        }
     }
 
     return <Outlet />;
