@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import Modules from './Modules';
 
 export default function Landing() {
+    const { user, loading } = useAuth();
+
     useEffect(() => {
         if (loading) {
             document.body.style.overflow = 'hidden';
