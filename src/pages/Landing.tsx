@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight, Zap, Shield, TrendingUp } from 'lucide-react';
@@ -6,11 +7,20 @@ import { useAuth } from '@/context/AuthContext';
 import Modules from './Modules';
 
 export default function Landing() {
-    const { user, loading } = useAuth();
+    useEffect(() => {
+        if (loading) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto'; // or '' to remove style
+        }
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [loading]);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
+            <div className="min-h-screen bg-[#050b14] flex items-center justify-center fixed inset-0 z-50">
                 <div className="h-8 w-8 rounded-full border-2 border-pluxo-pink border-t-transparent animate-spin" />
             </div>
         );
@@ -21,7 +31,7 @@ export default function Landing() {
     }
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-[#050b14] text-white selection:bg-pluxo-pink/30">
+        <div className="min-h-screen relative overflow-x-hidden bg-[#050b14] text-white selection:bg-pluxo-pink/30">
             {/* 1. Cinematic Background Layers */}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-pluxo-blue/10 rounded-full blur-[120px] animate-pulse-slow" />
