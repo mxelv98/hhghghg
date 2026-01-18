@@ -41,7 +41,7 @@ export default function Login() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/dashboard` // Standard modules page
+                    redirectTo: `${window.location.origin}/` // Redirect to valid root route first
                 }
             });
             if (error) throw error;
