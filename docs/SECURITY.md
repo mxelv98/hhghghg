@@ -1,20 +1,22 @@
-# Security Policy
+# Pluxo Security Policy
 
-## The "Secret Case" Strategy
-Pluxo uses a multi-layered security approach to protect intellectual property and user data:
-- **Sensitive Logic Isolation**: All core prediction engines and administrative validations reside exclusively on the server side (`/backend`).
-- **Secret Management**: API keys, database credentials, and signing secrets are never stored in the repository. They are managed via environment variables.
-- **Client-Side Sanitization**: The frontend (`/frontend`) acts as a pure presentation layer. It contains no sensitive logic or hardcoded secrets.
+## 🛡 Security Architecture: The "Secret Case"
+The Pluxo SaaS platform is built on the **"Secret Case"** principle. This means that even if the source code were fully public, the platform's core value (prediction logic) and administrative controls remain impenetrable without valid, server-side authentication and authorization.
 
-## Reporting a Vulnerability
-If you discover a security vulnerability, please report it privately. Do not open a public issue.
-- **Email**: security@pluxo.com
-- **Response Time**: We aim to acknowledge reports within 48 hours.
+### 🔑 Secret Management
+- **Zero Hardcoding**: No API keys, database URLs, or signing secrets are present in the source code.
+- **Environment Isolation**: All configuration is handled via environment variables (OS-level or via `.env.local`).
+- **Startup Protection**: The backend performs a "Secret Sweep" on startup, crashing the application immediately if critical environment variables are missing.
+
+### 🔒 Access Control (RBAC)
+- **Server-Side Sovereignty**: Role validation (Admin, VIP, VUP) is enforced strictly on the backend.
+- **Tier Verification**: Subscription expiration and level checks (Standard vs Elite) occur in the "Secret Case" during every sensitive request.
+- **Throttling**: Rate limiting is active on all prediction and admin endpoints to prevent data scraping and brute-force attempts.
+
+## Vulnerability Reporting
+If you discover a security vulnerability, please report it via [VULNERABILITY_REPORT.md](docs/VULNERABILITY_REPORT.md) or by contacting the core team directly. Do NOT open a public GitHub issue for security flaws.
 
 ## Prohibited Actions
-- Publicly disclosing vulnerabilities before they are patched.
-- Attempting to exploit vulnerabilities on production systems.
-- Reverse engineering the backend prediction models.
-
-## Environment Setup
-Any contributor must create a `.env.local` file based on `.env.example` in their local development environment.
+- Attempting to bypass the VIP validation logic.
+- Scraping prediction data via rapid-fires (Automatic IP banning will occur).
+- Committing real secrets to any branch of this repository.

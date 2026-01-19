@@ -79,9 +79,9 @@ create table public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy "Public profiles are viewable by everyone"
+create policy "Profiles are viewable by own user or admin"
   on public.profiles for select
-  using ( true );
+  using ( auth.uid() = id or (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')) );
 
 create policy "Users can insert their own profile"
   on public.profiles for insert

@@ -7,6 +7,15 @@ import predictionRoutes from './api/predictions.js';
 
 dotenv.config();
 
+// CRITICAL SECRET VALIDATION (SECRET CASE RULE)
+const REQUIRED_ENV = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'JWT_SECRET'];
+const missing = REQUIRED_ENV.filter(key => !process.env[key]);
+
+if (missing.length > 0) {
+    console.error('FATAL: CRITICAL SECRETS MISSING', missing);
+    process.exit(1); // Crash app as per security rules
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
