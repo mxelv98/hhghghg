@@ -1,106 +1,78 @@
-import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { Zap, Menu, X, User as UserIcon } from 'lucide-react';
+import { Outlet } from 'react-router-dom';
+import { Navbar } from '@/components/ui/Navbar';
+import { Rocket, Twitter, MessageSquare, ShieldCheck } from 'lucide-react';
 
 export default function Layout() {
-    const { user, logout } = useAuth();
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
     return (
-        <div className="min-h-screen flex flex-col font-sans text-gray-100 selection:bg-pluxo-pink/30">
-            {/* Navbar */}
-            <nav className="border-b border-white/5 bg-pluxo-dark/80 backdrop-blur-md sticky top-0 z-50">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2 group">
-                        <Zap className="h-6 w-6 text-pluxo-pink group-hover:text-pluxo-blue transition-colors" />
-                        <span className="text-xl font-bold tracking-tight">PLUXO</span>
-                    </Link>
-
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center gap-6">
-                        <Link to="/" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</Link>
-                        <a href="https://t.me" target="_blank" rel="noreferrer" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Telegram</a>
-
-                        {user ? (
-                            <div className="flex items-center gap-4">
-                                {user.role === 'admin' && (
-                                    <Link to="/admin">
-                                        <Button variant="ghost" size="sm">Admin</Button>
-                                    </Link>
-                                )}
-                                <Link to="/dashboard">
-                                    <Button variant="ghost" size="sm">Dashboard</Button>
-                                </Link>
-                                <Link to="/profile">
-                                    <Button variant="ghost" size="sm"><UserIcon className="h-4 w-4" /></Button>
-                                </Link>
-                                <Button variant="outline" size="sm" onClick={logout}>Logout</Button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-4">
-                                <Link to="/login">
-                                    <Button variant="ghost" size="sm">Login</Button>
-                                </Link>
-                                <Link to="/register">
-                                    <Button size="sm">Get Started</Button>
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Mobile Menu Toggle */}
-                    <button className="md:hidden p-2 text-gray-400 hover:text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                    </button>
-                </div>
-
-                {/* Mobile Nav */}
-                {isMenuOpen && (
-                    <div className="md:hidden border-t border-white/5 bg-pluxo-dark p-4 space-y-4">
-                        <Link to="/" className="block text-sm font-medium text-gray-400 hover:text-white" onClick={() => setIsMenuOpen(false)}>Home</Link>
-                        <a href="https://t.me" className="block text-sm font-medium text-gray-400 hover:text-white" onClick={() => setIsMenuOpen(false)}>Telegram</a>
-                        {user ? (
-                            <div className="space-y-2 pt-2 border-t border-white/5">
-                                {user.role === 'admin' && (
-                                    <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
-                                        <Button variant="ghost" className="w-full justify-start">Admin</Button>
-                                    </Link>
-                                )}
-                                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-                                </Link>
-                                <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start">Profile</Button>
-                                </Link>
-                                <Button variant="outline" className="w-full" onClick={() => { logout(); setIsMenuOpen(false); }}>Logout</Button>
-                            </div>
-                        ) : (
-                            <div className="space-y-4 pt-2 border-t border-white/5">
-                                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full">Login</Button>
-                                </Link>
-                                <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                                    <Button className="w-full">Get Started</Button>
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </nav>
+        <div className="min-h-screen flex flex-col font-sans text-gray-100 selection:bg-pluxo-pink/30 bg-pluxo-dark">
+            <Navbar />
 
             {/* Content */}
             <main className="flex-1">
                 <Outlet />
             </main>
 
-            {/* Footer */}
-            <footer className="border-t border-white/5 bg-pluxo-dark py-8">
-                <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-                    <p>© 2026 Pluxo AI. All rights reserved.</p>
+            {/* Professional Footer */}
+            <footer className="relative z-10 py-20 bg-black/40 backdrop-blur-xl border-t border-white/5">
+                <div className="container mx-auto px-6 max-w-7xl">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                        {/* Brand Section */}
+                        <div className="col-span-1 md:col-span-2">
+                            <div className="flex items-center gap-2 mb-6 group cursor-default">
+                                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-pluxo-pink to-pluxo-blue flex items-center justify-center p-2">
+                                    <Rocket className="text-white h-5 w-5 fill-white" />
+                                </div>
+                                <span className="text-2xl font-bold tracking-tighter text-white">PLUXO</span>
+                            </div>
+                            <p className="text-gray-400 max-w-sm leading-relaxed mb-6">
+                                The world's most advanced behavioral pattern recognition system for market volatility and crash prediction. Engineered for performance.
+                            </p>
+                            <div className="flex gap-4">
+                                <button className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                    <Twitter className="h-5 w-5" />
+                                </button>
+                                <button className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                    <MessageSquare className="h-5 w-5" />
+                                </button>
+                                <button className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                    <ShieldCheck className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Quick Links */}
+                        <div>
+                            <h4 className="text-white font-bold mb-6">Platform</h4>
+                            <ul className="space-y-4">
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Master Dashboard</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">AI Modules</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Elite Terminal</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">System Status</a></li>
+                            </ul>
+                        </div>
+
+                        {/* Legal */}
+                        <div>
+                            <h4 className="text-white font-bold mb-6">Resources</h4>
+                            <ul className="space-y-4">
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">API Docs</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Security</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row items-center justify-between pt-12 border-t border-white/5 gap-6 text-sm text-gray-500">
+                        <p>© 2026 PLUXO AI Systems. All rights reserved.</p>
+                        <p className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                            Global Infrastructure V2.4.0-Final
+                        </p>
+                    </div>
                 </div>
             </footer>
         </div>
     );
 }
+

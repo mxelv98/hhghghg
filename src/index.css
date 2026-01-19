@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 11 15 26;
+    --background: 2 6 23;
     --foreground: 255 255 255;
   }
 
@@ -14,14 +14,49 @@
     @apply bg-pluxo-dark text-white antialiased font-sans;
     overflow-y: auto !important;
   }
+
+  /* Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #020617;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-pluxo-card/80 backdrop-blur-md border border-white/10 shadow-xl;
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-pluxo-pink to-pluxo-blue;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-pluxo-pink via-purple-500 to-pluxo-blue;
+  }
+
+  .glow-border {
+    position: relative;
+  }
+  
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, #ff2d95, #3b82f6);
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0.3;
+    filter: blur(8px);
+    transition: opacity 0.3s ease;
+  }
+
+  .glow-border:hover::before {
+    opacity: 0.6;
   }
 }

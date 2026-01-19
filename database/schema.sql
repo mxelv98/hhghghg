@@ -44,6 +44,14 @@ create policy "Users can view own vip subscription"
   on public.vip_subscriptions for select
   using ( auth.uid() = user_id );
 
+create policy "Admins can insert vip subscriptions"
+  on public.vip_subscriptions for insert
+  with check ( exists (select 1 from public.profiles where id = auth.uid() and role = 'admin') );
+
+create policy "Admins can update vip subscriptions"
+  on public.vip_subscriptions for update
+  using ( exists (select 1 from public.profiles where id = auth.uid() and role = 'admin') );
+
 -- Admin Messages: Users can read messages targeted to them or null (broadcast)
 alter table public.admin_messages enable row level security;
 
