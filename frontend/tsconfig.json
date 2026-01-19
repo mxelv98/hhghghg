@@ -22,12 +22,21 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./*"
       ]
     }
   },
   "include": [
-    "src"
+    "src",
+    "components",
+    "pages",
+    "services",
+    "utils",
+    "lib",
+    "hooks",
+    "context",
+    "styles",
+    "types.ts"
   ],
   "references": [
     {

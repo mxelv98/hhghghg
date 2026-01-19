@@ -7,6 +7,9 @@ export default {
     "./frontend/pages/**/*.{js,ts,jsx,tsx}",
     "./frontend/services/**/*.{js,ts,jsx,tsx}",
     "./frontend/utils/**/*.{js,ts,jsx,tsx}",
+    "./frontend/hooks/**/*.{js,ts,jsx,tsx}",
+    "./frontend/lib/**/*.{js,ts,jsx,tsx}",
+    "./frontend/context/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {
