@@ -4,6 +4,9 @@ export default {
     "./index.html",
     "./frontend/src/**/*.{js,ts,jsx,tsx}",
     "./frontend/components/**/*.{js,ts,jsx,tsx}",
+    "./frontend/pages/**/*.{js,ts,jsx,tsx}",
+    "./frontend/services/**/*.{js,ts,jsx,tsx}",
+    "./frontend/utils/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {
