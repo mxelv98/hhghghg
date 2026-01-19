@@ -56,14 +56,54 @@ router.post('/initiate', authGuard, async (req, res) => {
 
         if (pError) throw pError;
 
-        // 4. Return success with payment details
-        // In a real implementation, this would return a NOWPayments link
-        return res.json({
-            success: true,
-            orderId: payment.id,
-            amount: price,
-            checkoutUrl: `https://nowpayments.io/payment?orderId=${payment.id}` // Placeholder
-        });
+        // 5. Initiate NOWPayments transaction
+        const nowPaymentsUrl = 'https://api.nowpayments.io/v1/payment';
+        const apiKey = process.env.NOWPAYMENTS_API_KEY;
+
+        try {
+            const npResponse = await fetch(nowPaymentsUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey || ''
+                },
+                body: JSON.stringify({
+                    price_amount: price,
+                    price_currency: 'usd',
+                    pay_currency: 'usdttrc20', // Default to USDT (TRC-20) for low fees
+                    ipn_callback_url: `${process.env.VITE_BACKEND_URL || 'https://pluxo-backend.vercel.app'}/api/webhooks/nowpayments`,
+                    order_id: payment.id,
+                    order_description: `${planId === 'vip_elite' ? 'ELITE' : 'VUP'} Access - ${timeOption}`
+                })
+            });
+
+            if (!npResponse.ok) {
+                const npError = await npResponse.json();
+                console.error('NOWPayments API Error:', npError);
+                throw new Error('Payment gateway synchronization failed');
+            }
+
+            const npData = await npResponse.json();
+
+            // 6. Update payment record with external payment ID
+            await supabase
+                .from('payments')
+                .update({ external_id: npData.payment_id })
+                .eq('id', payment.id);
+
+            // 7. Return success with real payment details
+            return res.json({
+                success: true,
+                orderId: payment.id,
+                amount: price,
+                checkoutUrl: npData.invoice_url || `https://nowpayments.io/payment?payment_id=${npData.payment_id}`
+            });
+
+        } catch (npErr) {
+            console.error('NOWPayments integration failed:', npErr);
+            // Fallback to internal simulation link if API fails, but mark as error ideally
+            return res.status(502).json({ error: 'Payment gateway offline. Please try again later.' });
+        }
 
     } catch (error: any) {
         console.error('Checkout initialization failed:', error);

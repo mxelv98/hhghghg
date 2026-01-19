@@ -66,13 +66,8 @@ export default function PaymentModal({ tier, option, onClose }: PaymentModalProp
 
             console.log('Payment initialized:', checkoutUrl);
 
-            // In a real app, we might redirect to checkoutUrl
-            // window.location.href = checkoutUrl;
-
-            // For now, let's keep the internal success flow
-            setTimeout(() => {
-                setStep('success');
-            }, 2000);
+            // Redirect to real NOWPayments checkout
+            window.location.href = checkoutUrl;
 
         } catch (err: any) {
             setError(err.message || 'Failed to initiate checkout');

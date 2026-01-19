@@ -6,6 +6,7 @@ import userRoutes from './api/user.js';
 import predictionRoutes from './api/predictions.js';
 import promoRoutes from './api/promo.js';
 import checkoutRoutes from './api/checkout.js';
+import webhookRoutes from './api/webhooks.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/promo', promoRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });
