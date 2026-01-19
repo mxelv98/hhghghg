@@ -1,4 +1,4 @@
-const API_URL = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_URL = (import.meta as any).env.VITE_BACKEND_URL || '';
 
 export const predictionService = {
     async generate(userId: string, type: 'standard' | 'elite', riskSetting: string = 'medium') {

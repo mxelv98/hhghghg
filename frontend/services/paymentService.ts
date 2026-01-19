@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 // Use import.meta.env directly for Vite environment variables
-const API_URL = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_URL = (import.meta as any).env.VITE_BACKEND_URL || '';
 
 export const paymentService = {
     validatePromo: async (code: string) => {
