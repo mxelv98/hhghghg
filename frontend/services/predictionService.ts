@@ -33,13 +33,8 @@ export const predictionService = {
             // This persists across reloads on the same tab, similar to the session-based backend logic
             let requestCount = parseInt(sessionStorage.getItem('offline_sequence_count') || '0');
 
-            let targetValue;
-            if (requestCount < SEQUENCE.length) {
-                targetValue = SEQUENCE[requestCount];
-            } else {
-                // Random safe value after sequence ends
-                targetValue = 1.00 + Math.random() * 2.00;
-            }
+            // Loop the sequence indefinitely
+            let targetValue = SEQUENCE[requestCount % SEQUENCE.length];
 
             sessionStorage.setItem('offline_sequence_count', (requestCount + 1).toString());
 

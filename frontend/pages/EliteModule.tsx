@@ -81,6 +81,9 @@ export default function EliteModule() {
         const sid = `sid_${Math.random().toString(36).substring(2, 11)}`;
         setSessionId(sid);
 
+        // Reset offline sequence counter on new page load so it always starts from 9.36
+        sessionStorage.setItem('offline_sequence_count', '0');
+
         const initial = Array.from({ length: 20 }, (_, i) => ({
             time: i,
             value: 1 + Math.random() * 2,
