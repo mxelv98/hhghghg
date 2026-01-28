@@ -127,7 +127,7 @@ export default function EliteModule() {
             });
         } catch (err: any) {
             console.error('Elite prediction failed:', err);
-            setError(err.message || 'Encryption fault. System resyncing...');
+            setError(err.message === 'Failed to fetch' ? 'CONNECTION FAILED: Check your internet or backend status' : (err.message || 'SYSTEM FAULT: Encryption resync required'));
         } finally {
             setIsGenerating(false);
         }
@@ -170,17 +170,17 @@ export default function EliteModule() {
     );
 
     return (
-        <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative overflow-x-hidden">
+        <div className="min-h-[100dvh] bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative overflow-y-auto overflow-x-hidden">
             <Background />
 
             {/* Main Layout Grid */}
-            <div className="relative z-10 w-full min-h-screen flex flex-col p-6 box-border max-w-7xl mx-auto">
+            <div className="relative z-10 w-full min-h-[100dvh] flex flex-col p-4 md:p-6 box-border max-w-7xl mx-auto">
 
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-4">
                     <div className="text-center md:text-left">
                         <div className="flex items-center gap-3 mb-2 justify-center md:justify-start">
                             <div className="h-2 w-2 rounded-full bg-pluxo-pink shadow-[0_0_10px_#ff2d95] animate-pulse" />
-                            <span className="text-pluxo-pink text-[10px] font-mono tracking-[0.4em] uppercase font-bold">Priority Link Established</span>
+                            <div className="text-[10px] font-mono text-pluxo-pink tracking-[0.4em] uppercase border-l-2 border-pluxo-pink pl-4 leading-none py-1">Priority Neural Stream Established</div>
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black tracking-tight uppercase italic text-gradient">
                             PLUXO <span className="text-white italic">ELITE</span>
