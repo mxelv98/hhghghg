@@ -24,13 +24,29 @@ export const predictionService = {
             console.warn('API_ERR: Connection failed, switching to OFFLINE SIMULATION', error);
 
             // Fallback: Generate local simulation for demo/mobile purposes
-            // This ensures the user always gets a result even if the backend is unreachable
             await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network latency
 
-            const lastValue = 1 + Math.random() * 2;
+            // Offline Deterministic Sequence Logic
+            const SEQUENCE = [9.36, 1.24, 3.63, 4.57];
+
+            // Use a simple local counter stored in sessionStorage to track sequence progress
+            // This persists across reloads on the same tab, similar to the session-based backend logic
+            let requestCount = parseInt(sessionStorage.getItem('offline_sequence_count') || '0');
+
+            let targetValue;
+            if (requestCount < SEQUENCE.length) {
+                targetValue = SEQUENCE[requestCount];
+            } else {
+                // Random safe value after sequence ends
+                targetValue = 1.00 + Math.random() * 2.00;
+            }
+
+            sessionStorage.setItem('offline_sequence_count', (requestCount + 1).toString());
+
             const simulatedPrediction = Array.from({ length: 20 }, (_, i) => ({
                 time: i,
-                value: i === 19 ? (1 + Math.random() * 5) : (1 + Math.random() * 3), // Make last point interesting
+                // Create a smooth curve ending at targetValue
+                value: i === 19 ? targetValue : (1 + Math.random() * (targetValue / 2)),
                 risk: 'low' as 'low' | 'medium' | 'high'
             }));
 

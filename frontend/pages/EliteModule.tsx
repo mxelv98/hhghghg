@@ -169,7 +169,7 @@ export default function EliteModule() {
     );
 
     return (
-        <div className="min-h-[100dvh] bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative">
+        <div className="min-h-[100dvh] bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-32 md:pb-12 relative">
             <Background />
 
             {/* Main Layout Grid */}
