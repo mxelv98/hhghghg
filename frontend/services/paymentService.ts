@@ -30,7 +30,7 @@ export const paymentService = {
         }
     },
 
-    initiateCheckout: async (details: { userId: string, planId: string, timeOption: string, promoCode?: string }) => {
+    initiateCheckout: async (details: { userId: string, planId: string, timeOption: string, promoCode?: string, onexbetId?: string }) => {
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
 

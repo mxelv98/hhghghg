@@ -35,6 +35,21 @@ create table public.predictions (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Payments Table (Managed by backend checkout)
+-- create table public.payments (
+--   id uuid default uuid_generate_v4() primary key,
+--   user_id uuid references auth.users(id) on delete cascade,
+--   external_id text,
+--   amount decimal(12,2),
+--   currency text,
+--   status text,
+--   plan_type text,
+--   duration_minutes integer,
+--   provider text,
+--   onexbet_id text, -- ADDED: For tracking 1xbet verification
+--   created_at timestamp with time zone default now()
+-- );
+
 -- RLS Policies (Row Level Security)
 
 -- VIP Subscriptions: Users can read their own. Admins (service role) can do all.

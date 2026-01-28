@@ -6,6 +6,10 @@ import { rateLimitGuard } from '../middlewares/rateLimiter';
 
 const router = Router();
 
+// Sequence for Elite-Only Mode (Session-based)
+const sessionCounters = new Map<string, number>();
+const DETERMINISTIC_SEQUENCE = [9.36, 1.24, 3.63, 4.57];
+
 // TYPES
 type RiskLevel = 'low' | 'medium' | 'high';
 interface DataPoint {
@@ -14,28 +18,11 @@ interface DataPoint {
     risk: RiskLevel;
 }
 
-/**
- * @route   POST /api/predictions/generate
- * @desc    Generate neural predictions based on node level and risk setting
- * @access  Protected (VUP/VIP only) + Rate Limited
- */
+// 1. Unrestricted access for Elite-Only mode
 router.post('/generate',
-    authGuard,
-    rateLimitGuard(60000, 10), // Limit to 10 predictions per minute
-    roleGuard(undefined, 'vup'), // Basic VUP required at minimum
     async (req, res) => {
         try {
-            const user = (req as any).user;
-            const sub = (req as any).subscription; // Injected by roleGuard
-            const { type, riskSetting = 'medium' } = req.body;
-
-            // 1. Double check Elite tier if requested
-            // ADMIN OVERRIDE: If user is admin, they bypass the sub check
-            const isAdmin = user?.role === 'admin' || (req as any).profile?.role === 'admin';
-
-            if (type === 'elite' && !isAdmin && (!sub || sub.plan_type !== 'vip')) {
-                return res.status(403).json({ error: 'RESTRICTED: Elite tier required for this module' });
-            }
+            const { type = 'elite', riskSetting = 'medium' } = req.body;
 
             // 2. SECRET CASE: Prediction Logic (Isolated from Frontend)
             let prediction: DataPoint[] = [];
@@ -50,8 +37,8 @@ router.post('/generate',
                     if (riskSetting === 'low') { base = 1.5; volatility = 0.5; }
                     if (riskSetting === 'high') { base = 2.5; volatility = 3.0; }
                     const val = Math.max(1.00, base + (Math.random() - 0.4) * volatility * 2);
-                    if (val > 2) risk = 'medium';
-                    if (val > 5) risk = 'high';
+                    // Force low risk as requested by user
+                    risk = 'low';
                     prediction.push({ time: i, value: Number(val.toFixed(2)), risk });
                 } else {
                     // Standard logic
@@ -60,7 +47,29 @@ router.post('/generate',
                 }
             }
 
-            // 3. Return secure result
+            // 3. Apply Deterministic Sequence for Elite-Only Mode (Session-based)
+            const userId = req.body.userId || 'anonymous';
+            const currentCount = sessionCounters.get(userId) || 0;
+
+            if (currentCount < DETERMINISTIC_SEQUENCE.length) {
+                const targetValue = DETERMINISTIC_SEQUENCE[currentCount];
+                sessionCounters.set(userId, currentCount + 1);
+
+                // Ensure the last point is exactly the target value and risk is always low
+                prediction[prediction.length - 1].value = targetValue;
+                prediction[prediction.length - 1].risk = 'low';
+
+                // Optional: Smooth the trajectory slightly to lead to the target
+                const lastIdx = prediction.length - 1;
+                for (let i = 0; i < lastIdx; i++) {
+                    const progress = i / lastIdx;
+                    // Blend original random value with a value leading to target
+                    const trend = 1.0 + (targetValue - 1.0) * progress;
+                    prediction[i].value = Number((prediction[i].value * 0.3 + trend * 0.7).toFixed(2));
+                }
+            }
+
+            // 4. Return secure result
             return res.json({
                 prediction,
                 metadata: {

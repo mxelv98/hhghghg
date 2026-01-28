@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { AreaChart, Area, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Shield, Settings, Target, Activity, Rocket, X } from 'lucide-react';
+import { Shield, Settings, Target, Activity, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { useAuth } from '@/context/AuthContext';
 import { predictionService } from '@/services/predictionService';
 
 // Types
@@ -69,32 +66,65 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function EliteModule() {
-    const { user } = useAuth();
-    const isMobile = useIsMobile();
-    const [data, setData] = useState<DataPoint[]>([]);
+    const [displayValue, setDisplayValue] = useState(0);
+    const [chartData, setChartData] = useState<DataPoint[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [riskSetting, setRiskSetting] = useState<RiskLevel>('medium');
-    const [showSettings, setShowSettings] = useState(!isMobile);
+    const [showSettings, setShowSettings] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sessionId, setSessionId] = useState<string>('');
+    const controls = useAnimation();
 
 
     useEffect(() => {
+        // Generate unique session ID for this page load
+        const sid = `sid_${Math.random().toString(36).substring(2, 11)}`;
+        setSessionId(sid);
+
         const initial = Array.from({ length: 20 }, (_, i) => ({
             time: i,
-            value: 1 + Math.random() * 3,
-            risk: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low' as RiskLevel
+            value: 1 + Math.random() * 2,
+            risk: 'low' as RiskLevel
         }));
-        setData(initial);
+        setChartData(initial);
+        setDisplayValue(initial[initial.length - 1].value);
     }, []);
 
+    // Animate value change
+    useEffect(() => {
+        if (chartData.length > 0) {
+            const target = chartData[chartData.length - 1].value;
+            let start = displayValue;
+            const duration = 1500;
+            const startTime = performance.now();
+
+            const animate = (currentTime: number) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+                setDisplayValue(start + (target - start) * eased);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+            requestAnimationFrame(animate);
+        }
+    }, [chartData]);
+
     const generatePrediction = async () => {
-        if (!user?.id) return;
         setIsGenerating(true);
         setError(null);
 
         try {
-            const { prediction } = await predictionService.generate(user.id, 'elite', riskSetting);
-            setData(prediction);
+            const { prediction } = await predictionService.generate(sessionId || 'anonymous', 'elite', riskSetting);
+            setChartData(prediction);
+            await controls.start({
+                opacity: [0, 1],
+                y: [10, 0],
+                transition: { duration: 0.5 }
+            });
         } catch (err: any) {
             console.error('Elite prediction failed:', err);
             setError(err.message || 'Encryption fault. System resyncing...');
@@ -139,143 +169,13 @@ export default function EliteModule() {
         </div>
     );
 
-    if (isMobile) {
-        return (
-            <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 flex flex-col pt-24">
-                <Background />
-
-                <header className="px-6 mb-6 flex items-center justify-between relative z-10">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="h-1.5 w-1.5 rounded-full bg-pluxo-pink animate-pulse" />
-                            <span className="text-pluxo-pink text-[8px] font-mono tracking-[0.3em] uppercase font-bold">{user?.role === 'admin' ? "Admin Access" : "Priority Link"}</span>
-                        </div>
-                        <h1 className="text-3xl font-black italic tracking-tight uppercase">
-                            ELITE <span className="text-gradient">{user?.role === 'admin' ? "ADMIN" : "MOBILE"}</span>
-                        </h1>
-                    </div>
-                    <button
-                        onClick={() => setShowSettings(true)}
-                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-white"
-                    >
-                        <Settings className="h-5 w-5" />
-                    </button>
-                </header>
-
-                <div className="flex-1 px-4 mb-6 relative z-10 flex flex-col">
-                    <GlassCard className="flex-1 p-0 flex flex-col overflow-hidden bg-black/40 border-white/5 h-full" hoverGlow={false}>
-                        <div className="p-4 border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-500 tracking-widest italic">
-                            <span className="flex items-center gap-2"><Rocket className="h-3 w-3 text-pluxo-pink" /> QUANTUM_STREAM</span>
-                            <span className="text-white font-black">{data.length > 0 ? data[data.length - 1].value.toFixed(2) : "0.00"}x</span>
-                        </div>
-
-                        <div className="flex-1 relative p-4">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data}>
-                                    <defs>
-                                        <linearGradient id="eliteMobileFill" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor={currentRiskColor} stopOpacity={0.4} />
-                                            <stop offset="100%" stopColor={currentRiskColor} stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <Area
-                                        type="monotone"
-                                        dataKey="value"
-                                        stroke={currentRiskColor}
-                                        strokeWidth={3}
-                                        fill="url(#eliteMobileFill)"
-                                        dot={(props) => <CustomDot {...props} dataLength={data.length} />}
-                                        animationDuration={500}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        <div className="p-4 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-                            <div className={cn(
-                                "text-[9px] font-black uppercase tracking-widest flex items-center gap-2",
-                                data.length > 0 && data[data.length - 1].risk === 'high' ? 'text-red-500' :
-                                    data.length > 0 && data[data.length - 1].risk === 'medium' ? 'text-orange-500' : 'text-green-500'
-                            )}>
-                                <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                                {data.length > 0 ? data[data.length - 1].risk : 'LINKED'}
-                            </div>
-                            <span className="text-[10px] font-mono text-gray-600">AES-256</span>
-                        </div>
-                    </GlassCard>
-                </div>
-
-                <div className="px-4 pb-8 relative z-10 flex flex-col gap-4">
-                    {error && (
-                        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-mono text-center animate-shake">
-                            {error}
-                        </div>
-                    )}
-                    <Button
-                        size="xl"
-                        variant="premium"
-                        disabled={isGenerating}
-                        onClick={generatePrediction}
-                        className="w-full h-16 text-xl font-black tracking-widest uppercase rounded-2xl shadow-pluxo-pink/20 shadow-xl italic"
-                    >
-                        {isGenerating ? "SYNCING..." : "EXECUTE"}
-                    </Button>
-                </div>
-
-                {/* Mobile Settings Drawer */}
-                <AnimatePresence>
-                    {showSettings && isMobile && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setShowSettings(false)}
-                                className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-                            />
-                            <motion.div
-                                initial={{ y: "100%" }}
-                                animate={{ y: 0 }}
-                                exit={{ y: "100%" }}
-                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="fixed bottom-0 left-0 right-0 z-[101] p-6 pt-10"
-                            >
-                                <GlassCard className="rounded-t-[2.5rem] p-8 border-white/10 bg-pluxo-dark/95 shadow-2xl" hoverGlow={false}>
-                                    <button
-                                        onClick={() => setShowSettings(false)}
-                                        className="absolute top-6 right-6 p-2 text-gray-500"
-                                    >
-                                        <X />
-                                    </button>
-                                    <h3 className="text-white text-xs font-black font-mono uppercase tracking-[0.3em] mb-8 flex items-center gap-3 italic">
-                                        <Shield className="h-4 w-4 text-pluxo-pink" /> Neural Config
-                                    </h3>
-                                    <div className="space-y-6 mb-8">
-                                        <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">Target Volatility</p>
-                                        <RiskSelector />
-                                    </div>
-                                    <Link to="/dashboard" className="block w-full">
-                                        <Button variant="outline" className="w-full h-14 border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-widest">
-                                            Disconnect Session
-                                        </Button>
-                                    </Link>
-                                </GlassCard>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    }
-
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative overflow-x-hidden">
             <Background />
 
             {/* Main Layout Grid */}
-            <div className="relative z-10 w-full min-h-screen grid grid-rows-[auto_1fr_auto] p-6 md:p-12 box-border gap-8 max-w-7xl mx-auto">
+            <div className="relative z-10 w-full min-h-screen flex flex-col p-6 box-border max-w-7xl mx-auto">
 
-                {/* 1. Header Section */}
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-4">
                     <div className="text-center md:text-left">
                         <div className="flex items-center gap-3 mb-2 justify-center md:justify-start">
@@ -283,7 +183,7 @@ export default function EliteModule() {
                             <span className="text-pluxo-pink text-[10px] font-mono tracking-[0.4em] uppercase font-bold">Priority Link Established</span>
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black tracking-tight uppercase italic text-gradient">
-                            ELITE <span className="text-white">{user?.role === 'admin' ? "ADMIN NODE" : "NODE"}</span>
+                            PLUXO <span className="text-white italic">ELITE</span>
                         </h1>
                     </div>
 
@@ -297,11 +197,6 @@ export default function EliteModule() {
                         >
                             <Settings className={cn("h-6 w-6 group-hover:rotate-90 transition-transform duration-500", showSettings ? "animate-spin-slow" : "")} />
                         </button>
-                        <Link to="/dashboard">
-                            <Button variant="outline" className="rounded-2xl h-14 px-8 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 uppercase font-bold tracking-widest text-xs">
-                                Disconnect
-                            </Button>
-                        </Link>
                     </div>
                 </header>
 
@@ -317,17 +212,22 @@ export default function EliteModule() {
                                 Quantum Prediction Matrix
                             </div>
                             <div className="flex items-center gap-4">
-                                <div className="text-4xl font-mono font-black text-white group-hover:text-pluxo-pink transition-colors">
-                                    {data.length > 0 ? data[data.length - 1].value.toFixed(2) : '0.00'}
+                                <motion.div
+                                    key={displayValue}
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="text-4xl font-mono font-black text-white group-hover:text-pluxo-pink transition-colors"
+                                >
+                                    {displayValue.toFixed(2)}
                                     <span className="text-xl text-gray-600 ml-1 font-normal opacity-50">x</span>
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
 
                         {/* Chart Component */}
-                        <div className="flex-1 relative p-8">
+                        <div className="flex-1 relative p-8 h-[400px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="eliteFill" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor={currentRiskColor} stopOpacity={0.4} />
@@ -342,9 +242,10 @@ export default function EliteModule() {
                                         stroke={currentRiskColor}
                                         strokeWidth={5}
                                         fill="url(#eliteFill)"
-                                        dot={(props) => <CustomDot {...props} dataLength={data.length} />}
+                                        dot={(props) => <CustomDot {...props} dataLength={chartData.length} />}
                                         isAnimationActive={true}
-                                        animationDuration={500}
+                                        animationDuration={1500}
+                                        animationEasing="ease-in-out"
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -354,28 +255,27 @@ export default function EliteModule() {
                         <div className="px-8 py-4 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
                             <div className={cn(
                                 "text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3",
-                                data.length > 0 && data[data.length - 1].risk === 'high' ? 'text-red-500' :
-                                    data.length > 0 && data[data.length - 1].risk === 'medium' ? 'text-orange-500' : 'text-green-500'
+                                chartData.length > 0 && chartData[chartData.length - 1].risk === 'high' ? 'text-red-500' :
+                                    chartData.length > 0 && chartData[chartData.length - 1].risk === 'medium' ? 'text-orange-500' : 'text-green-500'
                             )}>
                                 <span className="flex h-2 w-2 relative">
                                     <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                        data.length > 0 && data[data.length - 1].risk === 'high' ? 'bg-red-500' :
-                                            data.length > 0 && data[data.length - 1].risk === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                                        chartData.length > 0 && chartData[chartData.length - 1].risk === 'high' ? 'bg-red-500' :
+                                            chartData.length > 0 && chartData[chartData.length - 1].risk === 'medium' ? 'bg-orange-500' : 'bg-green-500'
                                     )}></span>
                                     <span className={cn("relative inline-flex rounded-full h-2 w-2",
-                                        data.length > 0 && data[data.length - 1].risk === 'high' ? 'bg-red-500' :
-                                            data.length > 0 && data[data.length - 1].risk === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                                        chartData.length > 0 && chartData[chartData.length - 1].risk === 'high' ? 'bg-red-500' :
+                                            chartData.length > 0 && chartData[chartData.length - 1].risk === 'medium' ? 'bg-orange-500' : 'bg-green-500'
                                     )}></span>
                                 </span>
-                                Risk Status: {data.length > 0 ? data[data.length - 1].risk : 'Calibrating'}
+                                Risk Status: {chartData.length > 0 ? chartData[chartData.length - 1].risk : 'Calibrating'}
                             </div>
                             <div className="text-[10px] font-mono text-gray-600 tracking-widest">ENCRYPTED STREAM // ISO-8601</div>
                         </div>
                     </GlassCard>
 
-                    {/* Desktop Sidebar */}
                     <AnimatePresence>
-                        {showSettings && !isMobile && (
+                        {showSettings && (
                             <motion.div
                                 initial={{ width: 0, opacity: 0, x: 20 }}
                                 animate={{ width: 380, opacity: 1, x: 0 }}
@@ -399,16 +299,25 @@ export default function EliteModule() {
                                     <div className="flex-1 overflow-hidden bg-black/40 rounded-3xl border border-white/5 p-6 flex flex-col">
                                         <h3 className="text-gray-600 text-[10px] font-mono uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Analysis Feed</h3>
                                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
-                                            {[...data].reverse().slice(0, 10).map((pt, i) => (
-                                                <div key={i} className="flex justify-between items-center py-2 border-b border-white/[0.03] last:border-0 text-[10px] font-mono group/item">
-                                                    <span className="text-gray-600 group-hover/item:text-gray-400 transition-colors">#{100 + pt.time}</span>
-                                                    <span className={cn("font-bold",
-                                                        pt.risk === 'high' ? 'text-red-500/80' : pt.risk === 'medium' ? 'text-orange-500/80' : 'text-green-500/80'
-                                                    )}>
-                                                        {pt.value.toFixed(2)}x
-                                                    </span>
-                                                </div>
-                                            ))}
+                                            <AnimatePresence mode="popLayout">
+                                                {[...chartData].reverse().slice(0, 10).map((pt, i) => (
+                                                    <motion.div
+                                                        key={`${pt.time}-${pt.value}`}
+                                                        layout
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: i * 0.1 }}
+                                                        className="flex justify-between items-center py-2 border-b border-white/[0.03] last:border-0 text-[10px] font-mono group/item"
+                                                    >
+                                                        <span className="text-gray-600 group-hover/item:text-gray-400 transition-colors">#{100 + pt.time}</span>
+                                                        <span className={cn("font-bold",
+                                                            pt.risk === 'high' ? 'text-red-500/80' : pt.risk === 'medium' ? 'text-orange-500/80' : 'text-green-500/80'
+                                                        )}>
+                                                            {pt.value.toFixed(2)}x
+                                                        </span>
+                                                    </motion.div>
+                                                ))}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
                                 </GlassCard>
@@ -435,26 +344,32 @@ export default function EliteModule() {
                         </div>
                     )}
 
-                    <Button
-                        size="xl"
-                        variant="premium"
-                        disabled={isGenerating}
-                        onClick={generatePrediction}
-                        className="relative h-28 w-full md:w-[700px] text-3xl font-black tracking-[0.2em] uppercase rounded-[2rem] border-2 border-white/20 shadow-2xl z-20 overflow-hidden transform hover:scale-[1.02] active:scale-[0.98] transition-all italic"
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full md:w-[700px] z-20"
                     >
-                        {isGenerating ? (
-                            <span className="flex items-center gap-6 animate-pulse">
-                                <Activity className="h-10 w-10 animate-spin" />
-                                SYNCHRONIZING...
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-6">
-                                <Target className="h-10 w-10" />
-                                EXECUTE PREDICTION
-                            </span>
-                        )}
-                        {!isGenerating && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />}
-                    </Button>
+                        <Button
+                            size="xl"
+                            variant="premium"
+                            disabled={isGenerating}
+                            onClick={generatePrediction}
+                            className="relative h-28 w-full text-3xl font-black tracking-[0.2em] uppercase rounded-[2rem] border-2 border-white/20 shadow-2xl overflow-hidden transition-all italic"
+                        >
+                            {isGenerating ? (
+                                <span className="flex items-center gap-6 animate-pulse">
+                                    <Activity className="h-10 w-10 animate-spin" />
+                                    SYNCHRONIZING...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-6">
+                                    <Target className="h-10 w-10" />
+                                    EXECUTE PREDICTION
+                                </span>
+                            )}
+                            {!isGenerating && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />}
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
         </div>

@@ -5,15 +5,14 @@ import { authGuard } from '../middlewares/auth.js';
 const router = Router();
 
 router.post('/initiate', authGuard, async (req, res) => {
-    const { userId, planId, timeOption, promoCode } = req.body;
+    const { userId, planId, timeOption, promoCode, onexbetId } = req.body;
 
     if (!userId || !planId || !timeOption) {
         return res.status(400).json({ error: 'Missing required checkout information' });
     }
 
     try {
-        // 1. Calculate price and duration based on plan and option
-        // In a production app, these should be stored in a database
+        // ... pricing logic ...
         const pricing: any = {
             'vip_vup': { '30 Minutes': 22, '1 Hour': 40, '2 Hours': 70 },
             'vip_elite': { '30 Minutes': 66, '1 Hour': 120, '2 Hours': 220, '3 Hour': 300, '3 Hours': 300 }
@@ -49,7 +48,8 @@ router.post('/initiate', authGuard, async (req, res) => {
                 currency: 'USD',
                 status: 'pending',
                 duration_minutes: durationMinutes,
-                provider: 'nowpayments'
+                provider: 'nowpayments',
+                onexbet_id: onexbetId // Store 1xbet ID
             })
             .select()
             .single();
