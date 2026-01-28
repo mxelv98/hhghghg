@@ -127,7 +127,7 @@ export default function EliteModule() {
             });
         } catch (err: any) {
             console.error('Elite prediction failed:', err);
-            setError(err.message === 'Failed to fetch' ? 'CONNECTION FAILED: Check your internet or backend status' : (err.message || 'SYSTEM FAULT: Encryption resync required'));
+            setError(err.message === 'Failed to fetch' ? 'CONNECTION_ERR: Cannot reach neural host' : (err.message || 'NEURAL_FAULT: Sync failed'));
         } finally {
             setIsGenerating(false);
         }
@@ -170,7 +170,7 @@ export default function EliteModule() {
     );
 
     return (
-        <div className="min-h-[100dvh] bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative overflow-y-auto overflow-x-hidden">
+        <div className="min-h-[100dvh] bg-[#030712] text-white font-sans selection:bg-pluxo-pink/30 pb-12 relative">
             <Background />
 
             {/* Main Layout Grid */}
@@ -204,7 +204,7 @@ export default function EliteModule() {
                 <div className="flex flex-col lg:flex-row gap-8 min-h-0">
 
                     {/* The Chart Area */}
-                    <GlassCard className="flex-1 p-0 overflow-hidden bg-black/40 border-white/5 flex flex-col group min-h-[400px]" hoverGlow={false}>
+                    <GlassCard className="flex-1 p-0 overflow-hidden bg-black/40 border-white/5 flex flex-col group min-h-[350px] md:min-h-[400px]" hoverGlow={false}>
                         {/* Status Bar */}
                         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                             <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500 tracking-widest uppercase italic">
@@ -225,7 +225,7 @@ export default function EliteModule() {
                         </div>
 
                         {/* Chart Component */}
-                        <div className="flex-1 relative p-8 h-[400px]">
+                        <div className="flex-1 relative p-4 md:p-8 h-[300px] md:h-[400px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                                     <defs>
@@ -277,10 +277,10 @@ export default function EliteModule() {
                     <AnimatePresence>
                         {showSettings && (
                             <motion.div
-                                initial={{ width: 0, opacity: 0, x: 20 }}
-                                animate={{ width: 380, opacity: 1, x: 0 }}
-                                exit={{ width: 0, opacity: 0, x: 20 }}
-                                className="flex-shrink-0"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="w-full lg:w-[380px] flex-shrink-0"
                             >
                                 <GlassCard className="h-full bg-white/[0.02] border-white/5 p-8 flex flex-col gap-8 rounded-[2.5rem]" hoverGlow={false}>
                                     <div>
@@ -298,7 +298,7 @@ export default function EliteModule() {
 
                                     <div className="flex-1 overflow-hidden bg-black/40 rounded-3xl border border-white/5 p-6 flex flex-col">
                                         <h3 className="text-gray-600 text-[10px] font-mono uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Analysis Feed</h3>
-                                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+                                        <div className="h-[200px] lg:flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
                                             <AnimatePresence mode="popLayout">
                                                 {[...chartData].reverse().slice(0, 10).map((pt, i) => (
                                                     <motion.div

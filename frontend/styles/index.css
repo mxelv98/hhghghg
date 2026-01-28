@@ -10,9 +10,18 @@
     --foreground: 255 255 255;
   }
 
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     @apply bg-pluxo-dark text-white antialiased font-sans;
-    overflow-y: auto !important;
+    position: relative;
   }
 
   /* Premium Scrollbar */
