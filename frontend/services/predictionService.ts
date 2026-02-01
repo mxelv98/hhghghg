@@ -26,22 +26,13 @@ export const predictionService = {
             // Fallback: Generate local simulation for demo/mobile purposes
             await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network latency
 
-            // Offline Deterministic Sequence Logic
-            const SEQUENCE = [9.36, 1.24, 3.63, 4.57];
-
-            // Use a simple local counter stored in sessionStorage to track sequence progress
-            // This persists across reloads on the same tab, similar to the session-based backend logic
-            let requestCount = parseInt(sessionStorage.getItem('offline_sequence_count') || '0');
-
-            // Loop the sequence indefinitely
-            let targetValue = SEQUENCE[requestCount % SEQUENCE.length];
-
-            sessionStorage.setItem('offline_sequence_count', (requestCount + 1).toString());
+            // Enhanced Random Generation for Demo/Offline
+            const targetValue = Number((1.10 + Math.random() * 14).toFixed(2)); 
 
             const simulatedPrediction = Array.from({ length: 20 }, (_, i) => ({
                 time: i,
                 // Create a smooth curve ending at targetValue
-                value: i === 19 ? targetValue : (1 + Math.random() * (targetValue / 2)),
+                value: i === 19 ? targetValue : Number((1 + Math.random() * (targetValue / 2)).toFixed(2)),
                 risk: 'low' as 'low' | 'medium' | 'high'
             }));
 

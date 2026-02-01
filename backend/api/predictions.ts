@@ -7,8 +7,6 @@ import { rateLimitGuard } from '../middlewares/rateLimiter';
 const router = Router();
 
 // Sequence for Elite-Only Mode (Session-based)
-const sessionCounters = new Map<string, number>();
-const DETERMINISTIC_SEQUENCE = [9.36, 1.24, 3.63, 4.57];
 
 // TYPES
 type RiskLevel = 'low' | 'medium' | 'high';
@@ -47,30 +45,9 @@ router.post('/generate',
                 }
             }
 
-            // 3. Apply Deterministic Sequence for Elite-Only Mode (Session-based)
-            const userId = req.body.userId || 'anonymous';
-            const currentCount = sessionCounters.get(userId) || 0;
-
-            if (currentCount < DETERMINISTIC_SEQUENCE.length) {
-                const targetValue = DETERMINISTIC_SEQUENCE[currentCount];
-                sessionCounters.set(userId, currentCount + 1);
-
-                // Ensure the last point is exactly the target value and risk is always low
-                prediction[prediction.length - 1].value = targetValue;
-                prediction[prediction.length - 1].risk = 'low';
-
-                // Optional: Smooth the trajectory slightly to lead to the target
-                const lastIdx = prediction.length - 1;
-                for (let i = 0; i < lastIdx; i++) {
-                    const progress = i / lastIdx;
-                    // Blend original random value with a value leading to target
-                    const trend = 1.0 + (targetValue - 1.0) * progress;
-                    prediction[i].value = Number((prediction[i].value * 0.3 + trend * 0.7).toFixed(2));
-                }
-            }
 
             // 4. Return secure result
-            return res.json({
+            res.json({
                 prediction,
                 metadata: {
                     timestamp: new Date().toISOString(),
@@ -78,6 +55,25 @@ router.post('/generate',
                     node: `NODE_${Math.floor(Math.random() * 9000) + 1000}`
                 }
             });
+
+            // 5. BACKGROUND SYNC: Push to Hostinger (External Project)
+            const hostingerUrl = process.env.HOSTINGER_WEBHOOK_URL;
+            if (hostingerUrl && hostingerUrl.includes('http') && !hostingerUrl.includes('your-hostinger-domain.com')) {
+                const finalMultiplier = prediction[prediction.length - 1].value;
+                
+                fetch(hostingerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        multiplier: finalMultiplier, // This will be saved as Crashed_Time in PHP
+                        type: type,
+                        timestamp: new Date().toISOString()
+                    })
+                }).then(r => {
+                    if (r.ok) console.log(`✅ External Sync Succesful: ${finalMultiplier}x -> Hostinger`);
+                    else console.warn(`⚠️ External Sync Failed: ${r.statusText}`);
+                }).catch(e => console.error('❌ External Sync Error:', e.message));
+            }
 
         } catch (error) {
             console.error('SEC_ERR:', error);
