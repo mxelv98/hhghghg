@@ -69,9 +69,10 @@ router.post('/generate',
                         type: type,
                         timestamp: new Date().toISOString()
                     })
-                }).then(r => {
-                    if (r.ok) console.log(`✅ External Sync Succesful: ${finalMultiplier}x -> Hostinger`);
-                    else console.warn(`⚠️ External Sync Failed: ${r.statusText}`);
+                }).then(async r => {
+                    const responseText = await r.text();
+                    if (r.ok) console.log(`✅ External Sync Succesful: ${finalMultiplier}x -> Hostinger. Response: ${responseText}`);
+                    else console.warn(`⚠️ External Sync Failed (${r.status}): ${responseText}`);
                 }).catch(e => console.error('❌ External Sync Error:', e.message));
             }
 
