@@ -46,7 +46,30 @@ router.post('/generate',
             }
 
 
-            // 4. Return secure result
+            // 4. BACKGROUND SYNC: Push to Hostinger (External Project)
+            const hostingerUrl = process.env.HOSTINGER_WEBHOOK_URL;
+            if (hostingerUrl && hostingerUrl.includes('http') && !hostingerUrl.includes('your-hostinger-domain.com')) {
+                const finalMultiplier = prediction[prediction.length - 1].value;
+                
+                try {
+                    const r = await fetch(hostingerUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            multiplier: finalMultiplier,
+                            type: type,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                    const responseText = await r.text();
+                    if (r.ok) console.log(`✅ External Sync Succesful: ${finalMultiplier}x. Response: ${responseText}`);
+                    else console.warn(`⚠️ External Sync Failed (${r.status}): ${responseText}`);
+                } catch (e: any) {
+                    console.error('❌ External Sync Error:', e.message);
+                }
+            }
+
+            // 5. Return secure result
             res.json({
                 prediction,
                 metadata: {
@@ -55,26 +78,6 @@ router.post('/generate',
                     node: `NODE_${Math.floor(Math.random() * 9000) + 1000}`
                 }
             });
-
-            // 5. BACKGROUND SYNC: Push to Hostinger (External Project)
-            const hostingerUrl = process.env.HOSTINGER_WEBHOOK_URL;
-            if (hostingerUrl && hostingerUrl.includes('http') && !hostingerUrl.includes('your-hostinger-domain.com')) {
-                const finalMultiplier = prediction[prediction.length - 1].value;
-                
-                fetch(hostingerUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        multiplier: finalMultiplier, // This will be saved as Crashed_Time in PHP
-                        type: type,
-                        timestamp: new Date().toISOString()
-                    })
-                }).then(async r => {
-                    const responseText = await r.text();
-                    if (r.ok) console.log(`✅ External Sync Succesful: ${finalMultiplier}x -> Hostinger. Response: ${responseText}`);
-                    else console.warn(`⚠️ External Sync Failed (${r.status}): ${responseText}`);
-                }).catch(e => console.error('❌ External Sync Error:', e.message));
-            }
 
         } catch (error) {
             console.error('SEC_ERR:', error);
