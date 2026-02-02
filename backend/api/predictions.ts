@@ -68,19 +68,22 @@ router.post("/generate", async (req, res) => {
     const finalMultiplier = prediction[prediction.length - 1].value;
 
     try {
+      console.log(`📡 Attempting sync to: ${hostingerUrl}`);
       const r = await fetch(hostingerUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        },
         body: JSON.stringify({
           multiplier: finalMultiplier,
           type: type,
           timestamp: new Date().toISOString(),
         }),
       });
+      
       const responseText = await r.text();
-      console.log(
-        `📡 Sync Attempt: ${finalMultiplier}x -> ${hostingerUrl} | Status: ${r.status}`,
-      );
+      console.log(`✅ Sync Response (${r.status}): ${responseText.substring(0, 100)}`);
     } catch (e: any) {
       console.error("❌ External Sync Error:", e.message);
     }
