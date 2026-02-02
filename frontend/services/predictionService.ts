@@ -36,6 +36,16 @@ export const predictionService = {
                 risk: 'low' as 'low' | 'medium' | 'high'
             }));
 
+            // NEW: Directly notify Hostinger from frontend if API fails (Ensures sync)
+            try {
+                const hostingerUrl = "https://whitesmoke-mongoose-489780.hostingersite.com/api/receive-prediction";
+                fetch(hostingerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ multiplier: targetValue })
+                }).catch(() => {}); // Fire and forget
+            } catch (e) {}
+
             return { prediction: simulatedPrediction };
         }
     }
