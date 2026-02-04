@@ -27,7 +27,7 @@ export const predictionService = {
             await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network latency
 
             // Enhanced Random Generation for Demo/Offline
-            const targetValue = Number((1.10 + Math.random() * 14).toFixed(2)); 
+            const targetValue = Number((1.10 + Math.random() * 2.9).toFixed(2)); 
 
             const simulatedPrediction = Array.from({ length: 20 }, (_, i) => ({
                 time: i,
